@@ -1,0 +1,122 @@
+// app/(routes)/admin/login/admin-login.scss
+@import '@/styles/scss/variables';
+
+.admin-login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  padding: $spacing-lg;
+
+  .login-container {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .login-card {
+    background: $white;
+    border-radius: $radius-lg;
+    padding: $spacing-2xl;
+    box-shadow: $shadow-xl;
+
+    .login-title {
+      color: $primary;
+      text-align: center;
+      margin-bottom: $spacing-md;
+    }
+
+    .login-subtitle {
+      text-align: center;
+      color: $text-muted;
+      margin-bottom: $spacing-2xl;
+      font-size: $font-size-sm;
+    }
+
+    .login-form {
+      .alert {
+        margin-bottom: $spacing-lg;
+      }
+
+      .form-group {
+        margin-bottom: $spacing-lg;
+
+        label {
+          display: block;
+          margin-bottom: $spacing-sm;
+          font-weight: 600;
+          color: $primary;
+        }
+
+        input {
+          width: 100%;
+          padding: 12px 14px;
+          border: 1px solid $border-color;
+          border-radius: $radius-md;
+          font-size: $font-size-base;
+          transition: border-color $transition-base;
+
+          &:focus {
+            outline: none;
+            border-color: $secondary;
+            box-shadow: 0 0 0 3px rgba($secondary, 0.1);
+          }
+
+          &:disabled {
+            background-color: $bg-light;
+            cursor: not-allowed;
+          }
+        }
+      }
+
+      .btn {
+        width: 100%;
+        margin-top: $spacing-lg;
+      }
+    }
+
+    .login-info {
+      margin-top: $spacing-2xl;
+      padding-top: $spacing-2xl;
+      border-top: 1px solid $border-light;
+
+      .info-title {
+        font-size: $font-size-sm;
+        font-weight: 600;
+        color: $text-dark;
+        margin-bottom: $spacing-sm;
+      }
+
+      code {
+        display: block;
+        background-color: $bg-light;
+        padding: $spacing-md;
+        border-radius: $radius-md;
+        font-size: 12px;
+        color: $text-dark;
+        line-height: 1.8;
+        font-family: 'Courier New', monospace;
+
+        span {
+          display: block;
+
+          &:first-child {
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .admin-login-page {
+    .login-card {
+      padding: $spacing-xl;
+
+      .login-title {
+        font-size: 24px;
+      }
+    }
+  }
+}

@@ -1,0 +1,315 @@
+@import './variables';
+
+// ============================================
+// Estilos Globales
+// ============================================
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-dark;
+  background-color: $bg-light;
+}
+
+// ============================================
+// Tipografía
+// ============================================
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family-heading;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: $spacing-lg;
+}
+
+h1 {
+  font-size: 48px;
+}
+
+h2 {
+  font-size: 36px;
+}
+
+h3 {
+  font-size: 28px;
+}
+
+h4 {
+  font-size: 24px;
+}
+
+h5 {
+  font-size: 20px;
+}
+
+h6 {
+  font-size: 16px;
+}
+
+p {
+  margin-bottom: $spacing-md;
+}
+
+a {
+  color: $secondary;
+  text-decoration: none;
+  transition: color $transition-base;
+
+  &:hover {
+    color: $primary;
+    text-decoration: underline;
+  }
+}
+
+strong {
+  font-weight: 600;
+}
+
+// ============================================
+// Botones
+// ============================================
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border: none;
+  border-radius: $radius-md;
+  font-size: $font-size-base;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all $transition-base;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus {
+    outline: 2px solid $secondary;
+    outline-offset: 2px;
+  }
+
+  // Variantes
+  &.btn-primary {
+    background-color: $secondary;
+    color: $white;
+
+    &:hover:not(:disabled) {
+      background-color: darken($secondary, 10%);
+      transform: translateY(-2px);
+      box-shadow: $shadow-md;
+    }
+  }
+
+  &.btn-success {
+    background-color: $success;
+    color: $white;
+
+    &:hover:not(:disabled) {
+      background-color: darken($success, 10%);
+    }
+  }
+
+  &.btn-danger {
+    background-color: $danger;
+    color: $white;
+
+    &:hover:not(:disabled) {
+      background-color: darken($danger, 10%);
+    }
+  }
+
+  &.btn-outline {
+    background-color: transparent;
+    color: $secondary;
+    border: 2px solid $secondary;
+
+    &:hover:not(:disabled) {
+      background-color: $secondary;
+      color: $white;
+    }
+  }
+
+  &.btn-sm {
+    padding: 6px 12px;
+    font-size: $font-size-sm;
+  }
+
+  &.btn-lg {
+    padding: 14px 28px;
+    font-size: $font-size-lg;
+  }
+
+  &.btn-block {
+    width: 100%;
+  }
+}
+
+// ============================================
+// Formularios
+// ============================================
+
+.form-group {
+  margin-bottom: $spacing-lg;
+}
+
+label {
+  display: block;
+  margin-bottom: $spacing-sm;
+  font-weight: 500;
+  color: $text-dark;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid $border-color;
+  border-radius: $radius-md;
+  font-family: inherit;
+  font-size: $font-size-base;
+  transition: border-color $transition-base;
+
+  &:focus {
+    outline: none;
+    border-color: $secondary;
+    box-shadow: 0 0 0 3px rgba($secondary, 0.1);
+  }
+
+  &:disabled {
+    background-color: $bg-light;
+    color: $text-muted;
+    cursor: not-allowed;
+  }
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: auto;
+  margin-right: $spacing-sm;
+}
+
+// ============================================
+// Tarjetas
+// ============================================
+
+.card {
+  @include card;
+  padding: $spacing-lg;
+}
+
+// ============================================
+// Alertas
+// ============================================
+
+.alert {
+  padding: $spacing-lg;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-lg;
+
+  &.alert-success {
+    background-color: lighten($success, 40%);
+    color: darken($success, 20%);
+    border: 1px solid lighten($success, 20%);
+  }
+
+  &.alert-error,
+  &.alert-danger {
+    background-color: lighten($danger, 40%);
+    color: darken($danger, 20%);
+    border: 1px solid lighten($danger, 20%);
+  }
+
+  &.alert-warning {
+    background-color: lighten($warning, 40%);
+    color: darken($warning, 20%);
+    border: 1px solid lighten($warning, 20%);
+  }
+
+  &.alert-info {
+    background-color: lighten($secondary, 40%);
+    color: darken($secondary, 20%);
+    border: 1px solid lighten($secondary, 20%);
+  }
+}
+
+// ============================================
+// Utilidades
+// ============================================
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-muted {
+  color: $text-muted;
+}
+
+.mt-md {
+  margin-top: $spacing-md;
+}
+
+.mb-md {
+  margin-bottom: $spacing-md;
+}
+
+.my-lg {
+  margin-top: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.hidden {
+  display: none !important;
+}
+
+// ============================================
+// Responsive
+// ============================================
+
+@media (max-width: $breakpoint-sm) {
+  h1 {
+    font-size: 32px;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  h3 {
+    font-size: 20px;
+  }
+
+  .container {
+    padding: 0 $spacing-sm;
+  }
+}

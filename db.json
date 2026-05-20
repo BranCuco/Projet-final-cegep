@@ -1,0 +1,84 @@
+{
+  "products": [
+    {
+      "name": "Processeur Intel Core i9-13900K",
+      "price": 579.99,
+      "description": "Puissant processeur de 13ème génération avec 24 cœurs et 32 threads. Performance exceptionnelle pour le gaming et le travail professionnel.",
+      "image": "https://m.media-amazon.com/images/I/51CsbchCa-L._AC_UF894,1000_QL80_.jpg",
+      "stock": 15,
+      "category": "Processeurs",
+      "id": "1"
+    },
+    {
+      "id": "2",
+      "name": "Carte Graphique NVIDIA RTX 4080",
+      "price": 1299.99,
+      "description": "Carte GPU haut de gamme pour le gaming en 4K et le ray tracing. 16 Go de VRAM GDDR6X.",
+      "image": "https://via.placeholder.com/300?text=RTX+4080",
+      "stock": 8,
+      "category": "Cartes Graphiques"
+    },
+    {
+      "id": "3",
+      "name": "RAM Corsair Dominator 32GB DDR5",
+      "price": 199.99,
+      "description": "Mémoire DDR5 ultra-rapide 6000MHz pour une performance maximale. Kit 32GB (2x16GB).",
+      "image": "https://via.placeholder.com/300?text=Corsair+RAM",
+      "stock": 25,
+      "category": "Mémoire"
+    },
+    {
+      "id": "4",
+      "name": "SSD NVMe Samsung 990 Pro 2TB",
+      "price": 299.99,
+      "description": "SSD NVMe ultra-rapide avec vitesses de lecture jusqu'à 7100 MB/s. Parfait pour le gaming et le contenu créatif.",
+      "image": "https://via.placeholder.com/300?text=Samsung+990+Pro",
+      "stock": 12,
+      "category": "Stockage"
+    },
+    {
+      "id": "5",
+      "name": "Boîtier NZXT H7 Flow",
+      "price": 159.99,
+      "description": "Boîtier ATX spacieux avec excellent flux d'air et panneaux en verre trempé. Gestion des câbles optimisée.",
+      "image": "https://via.placeholder.com/300?text=NZXT+H7",
+      "stock": 20,
+      "category": "Boîtiers"
+    },
+    {
+      "id": "6",
+      "name": "Alimentation Corsair HX1200 Platinum",
+      "price": 229.99,
+      "description": "Alimentation 1200W certifiée Platinum avec rendement 92%. Parfaite pour les systèmes haute performance.",
+      "image": "https://via.placeholder.com/300?text=Corsair+HX",
+      "stock": 18,
+      "category": "Alimentations"
+    },
+    {
+      "id": "7",
+      "name": "Refroidisseur Noctua NH-D15S",
+      "price": 99.99,
+      "description": "Refroidisseur air performant avec deux ventilateurs silencieux. Excellent rapport performance/bruit.",
+      "image": "https://via.placeholder.com/300?text=Noctua+NH-D15S",
+      "stock": 30,
+      "category": "Refroidissement"
+    },
+    {
+      "id": "8",
+      "name": "Carte Mère ASUS ROG Strix Z790",
+      "price": 349.99,
+      "description": "Carte mère haut de gamme avec socket LGA1700 pour processeurs Intel 13ème génération. Support WiFi 6E.",
+      "image": "https://via.placeholder.com/300?text=ASUS+ROG",
+      "stock": 10,
+      "category": "Cartes Mères"
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "name": "Admin",
+      "email": "admin@techgear.com"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

@@ -1,0 +1,81 @@
+// app/components/common/Footer.scss
+@import '@/styles/scss/variables';
+
+.footer {
+  background-color: $primary;
+  color: $white;
+  margin-top: auto;
+  padding: $spacing-2xl $spacing-md;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: $spacing-xl;
+    margin-bottom: $spacing-2xl;
+  }
+
+  .footer-section {
+    h4 {
+      color: $secondary;
+      margin-bottom: $spacing-md;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    p {
+      font-size: $font-size-sm;
+      line-height: 1.8;
+      margin-bottom: $spacing-sm;
+    }
+
+    ul {
+      list-style: none;
+
+      li {
+        margin-bottom: $spacing-sm;
+
+        a {
+          color: $white;
+          text-decoration: none;
+          transition: color $transition-base;
+          font-size: $font-size-sm;
+
+          &:hover {
+            color: $secondary;
+          }
+        }
+      }
+    }
+  }
+
+  .footer-bottom {
+    border-top: 1px solid rgba($white, 0.1);
+    padding-top: $spacing-lg;
+    text-align: center;
+    font-size: $font-size-sm;
+    color: rgba($white, 0.8);
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .footer {
+    padding: $spacing-xl $spacing-md;
+
+    .footer-content {
+      grid-template-columns: 1fr;
+      gap: $spacing-lg;
+    }
+
+    .footer-section {
+      h4 {
+        font-size: 14px;
+      }
+    }
+  }
+}

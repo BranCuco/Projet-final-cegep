@@ -1,0 +1,111 @@
+// app/components/admin/ProductForm.scss
+@import '@/styles/scss/variables';
+
+.product-form {
+  background: $white;
+  border-radius: $radius-md;
+  padding: $spacing-2xl;
+  box-shadow: $shadow-md;
+
+  .alert {
+    margin-bottom: $spacing-lg;
+  }
+
+  .form-group {
+    margin-bottom: $spacing-lg;
+
+    label {
+      display: block;
+      margin-bottom: $spacing-sm;
+      font-weight: 600;
+      color: $primary;
+
+      @media (max-width: $breakpoint-md) {
+        font-size: $font-size-sm;
+      }
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid $border-color;
+      border-radius: $radius-md;
+      font-size: $font-size-base;
+      font-family: inherit;
+      transition: border-color $transition-base;
+
+      &:focus {
+        outline: none;
+        border-color: $secondary;
+        box-shadow: 0 0 0 3px rgba($secondary, 0.1);
+      }
+
+      &:disabled {
+        background-color: $bg-light;
+        color: $text-muted;
+        cursor: not-allowed;
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .error-message {
+      display: block;
+      color: $danger;
+      font-size: $font-size-sm;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    .image-preview {
+      margin-top: $spacing-lg;
+      border-radius: $radius-md;
+      overflow: hidden;
+      max-width: 300px;
+      box-shadow: $shadow-md;
+
+      img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+    }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: $spacing-lg;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: $spacing-lg;
+    margin-top: $spacing-2xl;
+    padding-top: $spacing-xl;
+    border-top: 1px solid $border-light;
+
+    .btn {
+      flex: 1;
+
+      &:disabled {
+        opacity: 0.6;
+      }
+    }
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .product-form {
+    padding: $spacing-xl;
+
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+}

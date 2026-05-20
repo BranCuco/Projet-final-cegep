@@ -1,0 +1,138 @@
+// app/components/common/Header.scss
+@import '@/styles/scss/variables';
+
+.header {
+  background-color: $primary;
+  color: $white;
+  box-shadow: $shadow-md;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .container {
+    padding: 1rem;
+  }
+
+  .header-content {
+    @include flex-between;
+    gap: $spacing-lg;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    font-size: 24px;
+    font-weight: 700;
+    color: $white;
+    text-decoration: none;
+    transition: opacity $transition-base;
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    .logo-icon {
+      font-size: 32px;
+    }
+
+    .logo-text {
+      font-family: $font-family-heading;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: $spacing-lg;
+    flex: 1;
+    margin-left: $spacing-xl;
+
+    .nav-link {
+      color: $white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color $transition-base;
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+      font-size: inherit;
+
+      &:hover,
+      &.active {
+        color: $secondary;
+      }
+    }
+
+    .logout-btn {
+      @include btn-reset;
+      color: $white;
+
+      &:hover {
+        color: $accent;
+      }
+    }
+
+    .nav-label {
+      color: $secondary;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-right: $spacing-md;
+    }
+  }
+
+  .cart-link {
+    position: relative;
+    font-size: 24px;
+    color: $white;
+    text-decoration: none;
+    transition: opacity $transition-base;
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    .cart-icon {
+      display: inline-block;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background-color: $accent;
+      color: $white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .header {
+    .logo {
+      .logo-text {
+        display: none;
+      }
+    }
+
+    .nav {
+      margin-left: auto;
+      gap: $spacing-md;
+
+      .nav-label {
+        display: none;
+      }
+    }
+  }
+}

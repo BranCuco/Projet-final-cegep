@@ -1,0 +1,77 @@
+// app/(routes)/admin/products/admin-product-form.scss
+@import '@/styles/scss/variables';
+
+.admin-product-form-page {
+  padding: $spacing-2xl $spacing-md;
+
+  .container {
+    max-width: 800px;
+  }
+
+  .form-header {
+    margin-bottom: $spacing-2xl;
+
+    h1 {
+      color: $primary;
+      margin-bottom: $spacing-sm;
+    }
+
+    p {
+      color: $text-muted;
+      font-size: $font-size-sm;
+      margin: 0;
+    }
+  }
+
+  .delete-section {
+    margin-top: $spacing-2xl * 2;
+    padding: $spacing-2xl;
+    background-color: lighten($danger, 45%);
+    border: 2px dashed lighten($danger, 15%);
+    border-radius: $radius-md;
+
+    h3 {
+      color: $danger;
+      margin-bottom: $spacing-md;
+    }
+
+    p {
+      color: darken($danger, 10%);
+      margin-bottom: $spacing-lg;
+    }
+
+    .alert {
+      margin-bottom: $spacing-lg;
+    }
+
+    .btn {
+      margin-right: $spacing-md;
+      margin-bottom: $spacing-md;
+
+      &.btn-danger {
+        &.confirm {
+          background-color: darken($danger, 15%);
+
+          &:hover {
+            background-color: darken($danger, 25%);
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: $breakpoint-md) {
+  .admin-product-form-page {
+    padding: $spacing-xl $spacing-md;
+
+    .delete-section {
+      padding: $spacing-lg;
+
+      .btn {
+        width: 100%;
+        margin-right: 0;
+      }
+    }
+  }
+}
