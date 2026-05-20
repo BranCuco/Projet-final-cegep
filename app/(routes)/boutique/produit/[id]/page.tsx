@@ -24,6 +24,8 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState<number>(1);
   const [isZooming, setIsZooming] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -57,6 +59,38 @@ export default function ProductDetailPage() {
       addToCart(product.id, quantity, product.stock);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!product || isCheckingOut) return;
+
+    setIsCheckingOut(true);
+    setCheckoutError(null);
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: [{ productId: product.id, quantity }],
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Erreur lors de la creation de la session Stripe');
+      }
+
+      if (!data?.url) {
+        throw new Error('Session Stripe invalide');
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'Erreur lors du paiement');
+      setIsCheckingOut(false);
     }
   };
 
@@ -207,10 +241,19 @@ export default function ProductDetailPage() {
                     {stockReached ? 'Stock atteint' : addedToCart ? '✓ Ajouté au panier' : 'Ajouter au Panier'}
                   </button>
 
-                  <Link href="/boutique/cart" className="btn btn-success btn-lg" onClick={() => handleAddToCart()}>
-                    Acheter Maintenant
-                  </Link>
+                  <button
+                    type="button"
+                    className="btn btn-success btn-lg"
+                    onClick={handleCheckout}
+                    disabled={stockReached || quantity <= 0 || isCheckingOut}
+                  >
+                    {isCheckingOut ? 'Redirection vers Stripe...' : 'Acheter Maintenant'}
+                  </button>
                 </div>
+              )}
+
+              {checkoutError && (
+                <div className="alert alert-error small">{checkoutError}</div>
               )}
 
               {product.stock <= 5 && product.stock > 0 && (

@@ -11,6 +11,8 @@ export default function CartPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -55,6 +57,36 @@ export default function CartPage() {
   const handleClearCart = () => {
     clearCart();
     setCartItems([]);
+  };
+
+  const handleCheckout = async () => {
+    if (cartItems.length === 0 || isCheckingOut) return;
+
+    setIsCheckingOut(true);
+    setCheckoutError(null);
+
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: cartItems }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'Erreur lors de la creation de la session Stripe');
+      }
+
+      if (!data?.url) {
+        throw new Error('Session Stripe invalide');
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'Erreur lors du paiement');
+      setIsCheckingOut(false);
+    }
   };
 
   if (loading) {
@@ -134,7 +166,19 @@ export default function CartPage() {
                   <strong>${total.toFixed(2)}</strong>
                 </div>
 
+                {checkoutError && (
+                  <div className="alert alert-error">{checkoutError}</div>
+                )}
+
                 <div className="summary-actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={handleCheckout}
+                    disabled={cartItems.length === 0 || isCheckingOut}
+                  >
+                    {isCheckingOut ? 'Redirection vers Stripe...' : 'Payer avec Stripe'}
+                  </button>
                   <button type="button" className="btn btn-danger btn-block" onClick={handleClearCart}>
                     Vider le panier
                   </button>
