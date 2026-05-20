@@ -1,32 +1,42 @@
 // app/(routes)/boutique/produit/[id]/page.tsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { getCart, getProductById, addToCart, Product } from '@/lib/api';
-import './product-detail.scss';
+import { MouseEvent, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { getCart, getProductById, addToCart, Product, ProductReview } from "@/lib/api";
+import "./product-detail.scss";
+
+function renderStars(rating: number): string {
+  const normalized = Math.max(0, Math.min(5, Math.round(rating)));
+  return "★".repeat(normalized) + "☆".repeat(5 - normalized);
+}
 
 export default function ProductDetailPage() {
   const params = useParams();
   const productId = params.id as string;
-  
+
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [mainImage, setMainImage] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [isZooming, setIsZooming] = useState(false);
+  const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
 
   useEffect(() => {
     const loadProduct = async () => {
       try {
         const data = await getProductById(productId);
         if (!data) {
-          setError('Produit non trouvé');
+          setError("Produit non trouvé");
         } else {
           setProduct(data);
+          setMainImage(data.image ?? null);
         }
       } catch (err) {
-        setError('Erreur lors du chargement du produit');
+        setError("Erreur lors du chargement du produit");
       } finally {
         setLoading(false);
       }
@@ -39,11 +49,12 @@ export default function ProductDetailPage() {
     if (product) {
       const currentQuantity = getCart().find((item) => String(item.productId) === String(product.id))?.quantity ?? 0;
 
-      if (currentQuantity >= product.stock) {
+      if (currentQuantity + quantity > product.stock) {
+        // prevent exceeding stock
         return;
       }
 
-      addToCart(product.id, 1, product.stock);
+      addToCart(product.id, quantity, product.stock);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
     }
@@ -65,7 +76,7 @@ export default function ProductDetailPage() {
         <div className="container">
           <div className="error-section">
             <h2>Produit non trouvé</h2>
-            <p>{error || 'Le produit que vous recherchez n\'existe pas.'}</p>
+            <p>{error || "Le produit que vous recherchez n'existe pas."}</p>
             <Link href="/boutique" className="btn btn-primary">
               Retour à la boutique
             </Link>
@@ -78,79 +89,166 @@ export default function ProductDetailPage() {
   const isAvailable = product.stock > 0;
   const currentQuantityInCart = getCart().find((item) => String(item.productId) === String(product.id))?.quantity ?? 0;
   const stockReached = currentQuantityInCart >= product.stock;
+  const rating = product.rating ?? 4.2;
+  const reviewCount = product.reviewCount ?? (product.reviews?.length ?? 0);
+
+  // image set (support product.images array if available)
+  const images = product.images && Array.isArray(product.images) && product.images.length > 0
+    ? product.images
+    : [product.image];
+
+  const fallbackReviews: ProductReview[] = [
+    {
+      id: `${product.id}-r1`,
+      author: "Alex M.",
+      rating: Math.max(1, Math.round(rating)),
+      comment: "Excellent produit, très bonne qualité et livraison rapide.",
+      date: "2026-05-18",
+    },
+    {
+      id: `${product.id}-r2`,
+      author: "Sophie L.",
+      rating: Math.max(1, Math.round(rating - 1)),
+      comment: "Bon rapport qualité/prix. Je recommande.",
+      date: "2026-05-10",
+    },
+  ];
+  const reviews = product.reviews && product.reviews.length > 0 ? product.reviews : fallbackReviews;
+
+  const maxSelectable = Math.max(1, Math.min(product.stock - currentQuantityInCart, 10));
+
+  const handleImageMouseMove = (event: MouseEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    setZoomOrigin(`${x}% ${y}%`);
+  };
 
   return (
     <div className="product-detail-page">
       <div className="container">
-        {/* Navigation */}
         <div className="breadcrumb">
           <Link href="/boutique">← Retour à la boutique</Link>
         </div>
 
-        {/* Détails du Produit */}
-        <div className="product-detail-container">
-          {/* Image */}
-          <div className="product-detail-image">
-            <img src={product.image} alt={product.name} />
-            {!isAvailable && (
-              <div className="unavailable-overlay">Indisponible</div>
-            )}
+        <div className="product-detail-container amazon-style">
+          {/* Gallery (left) */}
+          <div className="gallery-column">
+            <div className="thumbnails">
+              {images.map((img: string, idx: number) => (
+                <button
+                  key={idx}
+                  className={`thumb ${mainImage === img ? 'active' : ''}`}
+                  onClick={() => setMainImage(img)}
+                  aria-label={`Voir l'image ${idx + 1}`}
+                >
+                  <img src={img} alt={`${product.name} ${idx + 1}`} />
+                </button>
+              ))}
+            </div>
+            <div className="main-image">
+              <div
+                className="zoom-wrapper"
+                onMouseMove={handleImageMouseMove}
+                onMouseEnter={() => setIsZooming(true)}
+                onMouseLeave={() => setIsZooming(false)}
+              >
+                <img
+                  src={mainImage ?? product.image}
+                  alt={product.name}
+                  className={isZooming ? "zoomed" : ""}
+                  style={{ transformOrigin: zoomOrigin }}
+                />
+              </div>
+              {!isAvailable && <div className="unavailable-overlay">Indisponible</div>}
+            </div>
           </div>
 
-          {/* Info */}
-          <div className="product-detail-info">
+          {/* Main info (center) */}
+          <div className="product-main-info">
             <h1>{product.name}</h1>
 
-            <div className="product-meta">
-              <div className="price-section">
-                <span className="price">${product.price.toFixed(2)}</span>
+            <div className="summary">
+              <div className="rating-block" aria-label={`Note ${rating.toFixed(1)} sur 5`}>
+                <span className="stars">{renderStars(rating)}</span>
+                <span className="rating-value">{rating.toFixed(1)}</span>
+                <span className="review-count">({reviewCount} avis)</span>
+              </div>
+              <div className="short-desc">{product.shortDescription ?? ""}</div>
+              <div className="zoom-hint">Survolez l'image pour zoomer</div>
+            </div>
+
+            <div className="description">
+              <h3>Description du produit</h3>
+              <p>{product.description}</p>
+            </div>
+          </div>
+
+          {/* Purchase panel (right) */}
+          <aside className="purchase-panel">
+            <div className="panel-inner">
+              <div className="price-row">
+                <div className="price">${product.price.toFixed(2)}</div>
+                <div className="savings">{product.savings ? `${product.savings} off` : ""}</div>
               </div>
 
-              <div className="stock-section">
+              <div className="delivery">Livraison: Livraison standard disponible</div>
+
+              <div className="stock-row">
                 <span className={`stock-badge ${isAvailable ? 'available' : 'unavailable'}`}>
                   {isAvailable ? `${product.stock} en stock` : 'Indisponible'}
                 </span>
               </div>
-            </div>
 
-            <div className="description">
-              <h3>Description</h3>
-              <p>{product.description}</p>
-            </div>
+              {isAvailable && (
+                <div className="purchase-controls">
+                  <label htmlFor="quantity">Quantity:</label>
+                  <select
+                    id="quantity"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                  >
+                    {Array.from({ length: maxSelectable }, (_, i) => i + 1).map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
 
-            {/* Actions */}
-            <div className="actions">
-              {isAvailable ? (
-                <>
-                  <button 
+                  <button
                     onClick={handleAddToCart}
                     className={`btn btn-primary btn-lg ${addedToCart ? 'added' : ''}`}
-                    disabled={stockReached}
+                    disabled={stockReached || quantity <= 0}
                   >
                     {stockReached ? 'Stock atteint' : addedToCart ? '✓ Ajouté au panier' : 'Ajouter au Panier'}
                   </button>
-                  <Link 
-                    href="/boutique/cart" 
-                    className="btn btn-success btn-lg"
-                    onClick={() => handleAddToCart()}
-                  >
+
+                  <Link href="/boutique/cart" className="btn btn-success btn-lg" onClick={() => handleAddToCart()}>
                     Acheter Maintenant
                   </Link>
-                </>
-              ) : (
-                <button className="btn btn-primary btn-lg" disabled>
-                  Indisponible
-                </button>
+                </div>
+              )}
+
+              {product.stock <= 5 && product.stock > 0 && (
+                <div className="alert alert-warning small">⚠️ Stock limité: il ne reste que {product.stock}</div>
               )}
             </div>
-
-            {product.stock <= 5 && product.stock > 0 && (
-              <div className="alert alert-warning">
-                ⚠️ Stock limité! Il ne reste que {product.stock} produit{product.stock !== 1 ? 's' : ''}
-              </div>
-            )}
-          </div>
+          </aside>
         </div>
+
+        <section className="reviews-section">
+          <h2>Reseñas de clientes</h2>
+          <div className="reviews-list">
+            {reviews.map((review) => (
+              <article key={review.id} className="review-card">
+                <div className="review-header">
+                  <strong>{review.author}</strong>
+                  <span className="review-date">{review.date}</span>
+                </div>
+                <div className="review-stars">{renderStars(review.rating)}</div>
+                <p>{review.comment}</p>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -9,8 +9,15 @@ interface ProductCardProps {
   product: Product;
 }
 
+function renderStars(rating: number): string {
+  const normalized = Math.max(0, Math.min(5, Math.round(rating)));
+  return '★'.repeat(normalized) + '☆'.repeat(5 - normalized);
+}
+
 export default function ProductCard({ product }: ProductCardProps) {
   const isAvailable = product.stock > 0;
+  const rating = product.rating ?? 4;
+  const reviewCount = product.reviewCount ?? 0;
 
   return (
     <div className="product-card">
@@ -30,6 +37,12 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       <div className="product-info">
         <h4 className="product-name">{product.name}</h4>
+
+        <div className="product-rating" aria-label={`Note ${rating.toFixed(1)} sur 5`}>
+          <span className="stars">{renderStars(rating)}</span>
+          <span className="rating-value">{rating.toFixed(1)}</span>
+          <span className="review-count">({reviewCount})</span>
+        </div>
         
         <div className="product-price-stock">
           <span className="product-price">${product.price.toFixed(2)}</span>

@@ -12,6 +12,20 @@ export interface Product {
   stock: number;
   category?: string;
   createdAt?: string;
+  rating?: number;
+  reviewCount?: number;
+  images?: string[];
+  reviews?: ProductReview[];
+  shortDescription?: string;
+  savings?: string;
+}
+
+export interface ProductReview {
+  id: string | number;
+  author: string;
+  rating: number;
+  comment: string;
+  date: string;
 }
 
 export interface CartItem {
