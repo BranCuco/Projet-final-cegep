@@ -10,67 +10,77 @@
       "id": "1"
     },
     {
-      "id": "2",
-      "name": "Carte Graphique NVIDIA RTX 4080",
+      "name": "ASUS TUF Gaming NVIDIA GeForce RTX™ 4080 Super OC Edition Carte graphique",
       "price": 1299.99,
       "description": "Carte GPU haut de gamme pour le gaming en 4K et le ray tracing. 16 Go de VRAM GDDR6X.",
-      "image": "https://via.placeholder.com/300?text=RTX+4080",
+      "image": "https://m.media-amazon.com/images/I/81rCZZvkIVL._AC_UF894,1000_QL80_.jpg",
       "stock": 8,
-      "category": "Cartes Graphiques"
+      "category": "Cartes Graphiques",
+      "id": "2"
     },
     {
-      "id": "3",
       "name": "RAM Corsair Dominator 32GB DDR5",
       "price": 199.99,
       "description": "Mémoire DDR5 ultra-rapide 6000MHz pour une performance maximale. Kit 32GB (2x16GB).",
-      "image": "https://via.placeholder.com/300?text=Corsair+RAM",
+      "image": "https://assets.corsair.com/image/upload/c_pad,q_auto,h_1024,w_1024,f_auto/products/Memory/CMT32GX5M2X6400C38/Gallery/DOMINATOR_RGB_PLATINUM_BLACK_DDR5_13.webp",
       "stock": 25,
-      "category": "Mémoire"
+      "category": "Mémoire",
+      "id": "3"
     },
     {
-      "id": "4",
       "name": "SSD NVMe Samsung 990 Pro 2TB",
       "price": 299.99,
       "description": "SSD NVMe ultra-rapide avec vitesses de lecture jusqu'à 7100 MB/s. Parfait pour le gaming et le contenu créatif.",
-      "image": "https://via.placeholder.com/300?text=Samsung+990+Pro",
+      "image": "https://m.media-amazon.com/images/I/61qidDdfgRL.jpg",
       "stock": 12,
-      "category": "Stockage"
+      "category": "Stockage",
+      "id": "4"
     },
     {
-      "id": "5",
       "name": "Boîtier NZXT H7 Flow",
       "price": 159.99,
       "description": "Boîtier ATX spacieux avec excellent flux d'air et panneaux en verre trempé. Gestion des câbles optimisée.",
-      "image": "https://via.placeholder.com/300?text=NZXT+H7",
+      "image": "https://m.media-amazon.com/images/I/51hN4NaXj2L._AC_UF894,1000_QL80_.jpg",
       "stock": 20,
-      "category": "Boîtiers"
+      "category": "Boîtiers",
+      "id": "5"
     },
     {
-      "id": "6",
       "name": "Alimentation Corsair HX1200 Platinum",
       "price": 229.99,
       "description": "Alimentation 1200W certifiée Platinum avec rendement 92%. Parfaite pour les systèmes haute performance.",
-      "image": "https://via.placeholder.com/300?text=Corsair+HX",
+      "image": "https://www.dadducharger.com/cdn/shop/files/4.webp?v=1761314813",
       "stock": 18,
-      "category": "Alimentations"
+      "category": "Alimentations",
+      "id": "6"
     },
     {
-      "id": "7",
       "name": "Refroidisseur Noctua NH-D15S",
       "price": 99.99,
       "description": "Refroidisseur air performant avec deux ventilateurs silencieux. Excellent rapport performance/bruit.",
-      "image": "https://via.placeholder.com/300?text=Noctua+NH-D15S",
+      "image": "https://m.media-amazon.com/images/I/81Fz3KKzEJL.jpg",
       "stock": 30,
-      "category": "Refroidissement"
+      "category": "Refroidissement",
+      "id": "7"
     },
     {
-      "id": "8",
       "name": "Carte Mère ASUS ROG Strix Z790",
       "price": 349.99,
       "description": "Carte mère haut de gamme avec socket LGA1700 pour processeurs Intel 13ème génération. Support WiFi 6E.",
-      "image": "https://via.placeholder.com/300?text=ASUS+ROG",
+      "image": "https://dlcdnwebimgs.asus.com/files/media/9A827026-9AD2-4CE7-9958-DB583A2DB6F8/v1/img/kv/ROG-Strix-Z790-E-Gaming.png",
       "stock": 10,
-      "category": "Cartes Mères"
+      "category": "Cartes Mères",
+      "id": "8"
+    },
+    {
+      "name": "asd",
+      "price": 123,
+      "description": "asd",
+      "image": "asd",
+      "stock": 23,
+      "category": "Processeurs",
+      "createdAt": "2026-05-20T13:33:26.353Z",
+      "id": "EF9q9i7iDs0"
     }
   ],
   "users": [

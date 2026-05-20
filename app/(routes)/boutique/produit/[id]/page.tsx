@@ -4,12 +4,12 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getProductById, addToCart, Product } from '@/lib/api';
+import { getCart, getProductById, addToCart, Product } from '@/lib/api';
 import './product-detail.scss';
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const productId = parseInt(params.id as string);
+  const productId = params.id as string;
   
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,13 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product.id, 1);
+      const currentQuantity = getCart().find((item) => String(item.productId) === String(product.id))?.quantity ?? 0;
+
+      if (currentQuantity >= product.stock) {
+        return;
+      }
+
+      addToCart(product.id, 1, product.stock);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
     }
@@ -70,6 +76,8 @@ export default function ProductDetailPage() {
   }
 
   const isAvailable = product.stock > 0;
+  const currentQuantityInCart = getCart().find((item) => String(item.productId) === String(product.id))?.quantity ?? 0;
+  const stockReached = currentQuantityInCart >= product.stock;
 
   return (
     <div className="product-detail-page">
@@ -117,11 +125,12 @@ export default function ProductDetailPage() {
                   <button 
                     onClick={handleAddToCart}
                     className={`btn btn-primary btn-lg ${addedToCart ? 'added' : ''}`}
+                    disabled={stockReached}
                   >
-                    {addedToCart ? '✓ Ajouté au panier' : 'Ajouter au Panier'}
+                    {stockReached ? 'Stock atteint' : addedToCart ? '✓ Ajouté au panier' : 'Ajouter au Panier'}
                   </button>
                   <Link 
-                    href="/boutique/checkout" 
+                    href="/boutique/cart" 
                     className="btn btn-success btn-lg"
                     onClick={() => handleAddToCart()}
                   >

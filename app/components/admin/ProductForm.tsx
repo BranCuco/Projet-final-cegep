@@ -20,10 +20,10 @@ export default function ProductForm({
 }: ProductFormProps) {
   const [formData, setFormData] = useState({
     name: initialProduct?.name || '',
-    price: initialProduct?.price || 0,
+    price: initialProduct?.price?.toString() || '',
     description: initialProduct?.description || '',
     image: initialProduct?.image || '',
-    stock: initialProduct?.stock || 0,
+    stock: initialProduct?.stock?.toString() || '',
     category: initialProduct?.category || '',
   });
 
@@ -36,7 +36,7 @@ export default function ProductForm({
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'price' || name === 'stock' ? parseFloat(value) : value,
+      [name]: value,
     }));
     // Limpiar error del campo
     if (errors[name]) {
@@ -48,8 +48,17 @@ export default function ProductForm({
     e.preventDefault();
     setSubmitError('');
 
+    const normalizedProduct = {
+      name: formData.name.trim(),
+      price: Number(formData.price),
+      description: formData.description.trim(),
+      image: formData.image.trim(),
+      stock: Number(formData.stock),
+      category: formData.category.trim(),
+    };
+
     // Validar
-    const validation = validateProduct(formData);
+    const validation = validateProduct(normalizedProduct);
     if (!validation.valid) {
       const newErrors: { [key: string]: string } = {};
       validation.errors.forEach((error) => {
@@ -61,7 +70,7 @@ export default function ProductForm({
     }
 
     try {
-      await onSubmit(formData);
+      await onSubmit(normalizedProduct);
     } catch (error) {
       setSubmitError(
         error instanceof Error ? error.message : 'Erreur lors de l\'enregistrement'

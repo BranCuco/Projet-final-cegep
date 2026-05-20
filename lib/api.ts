@@ -4,7 +4,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 
 export interface Product {
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   description: string;
@@ -15,7 +15,7 @@ export interface Product {
 }
 
 export interface CartItem {
-  productId: number;
+  productId: string | number;
   quantity: number;
   product?: Product;
 }
@@ -35,11 +35,22 @@ export async function getProducts(): Promise<Product[]> {
   }
 }
 
-export async function getProductById(id: number): Promise<Product | null> {
+export async function getProductById(id: string | number): Promise<Product | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/products/${id}`);
-    if (!response.ok) throw new Error('Producto no encontrado');
-    return response.json();
+
+    if (response.ok) {
+      return response.json();
+    }
+
+    const products = await getProducts();
+    const product = products.find((item) => String(item.id) === String(id));
+
+    if (product) {
+      return product;
+    }
+
+    throw new Error('Producto no encontrado');
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;
@@ -64,7 +75,7 @@ export async function createProduct(product: Omit<Product, 'id' | 'createdAt'>):
   }
 }
 
-export async function updateProduct(id: number, product: Partial<Product>): Promise<Product | null> {
+export async function updateProduct(id: string | number, product: Partial<Product>): Promise<Product | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'PUT',
@@ -79,7 +90,7 @@ export async function updateProduct(id: number, product: Partial<Product>): Prom
   }
 }
 
-export async function deleteProduct(id: number): Promise<boolean> {
+export async function deleteProduct(id: string | number): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'DELETE',
@@ -110,12 +121,40 @@ export function searchProducts(products: Product[], query: string): Product[] {
 // ============================================
 
 const CART_STORAGE_KEY = 'techgear_cart';
+const CART_UPDATED_EVENT = 'techgear:cart-updated';
+
+function normalizeProductId(productId: string | number): string {
+  return String(productId);
+}
+
+function notifyCartChanged(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(CART_UPDATED_EVENT));
+  }
+}
 
 export function getCart(): CartItem[] {
   try {
     if (typeof window === 'undefined') return [];
     const cart = localStorage.getItem(CART_STORAGE_KEY);
-    return cart ? JSON.parse(cart) : [];
+    const parsedCart = cart ? JSON.parse(cart) : [];
+
+    if (!Array.isArray(parsedCart)) {
+      return [];
+    }
+
+    return parsedCart
+      .filter((item) => item && item.productId !== undefined && item.productId !== null)
+      .map((item) => ({
+        productId: normalizeProductId(item.productId),
+        quantity: Number.isFinite(item.quantity) && item.quantity > 0 ? item.quantity : 1,
+        product: item.product
+          ? {
+              ...item.product,
+              id: normalizeProductId(item.product.id),
+            }
+          : undefined,
+      }));
   } catch (error) {
     console.error('Error reading cart:', error);
     return [];
@@ -126,28 +165,54 @@ export function saveCart(cart: CartItem[]): void {
   try {
     if (typeof window !== 'undefined') {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      notifyCartChanged();
     }
   } catch (error) {
     console.error('Error saving cart:', error);
   }
 }
 
-export function addToCart(productId: number, quantity: number = 1): void {
+export function addToCart(productId: string | number, quantity: number = 1, maxQuantity?: number): void {
+  const normalizedProductId = normalizeProductId(productId);
   const cart = getCart();
-  const existingItem = cart.find((item) => item.productId === productId);
+  const existingItem = cart.find((item) => normalizeProductId(item.productId) === normalizedProductId);
+  const allowedQuantity = typeof maxQuantity === 'number' ? Math.max(0, maxQuantity) : undefined;
 
   if (existingItem) {
-    existingItem.quantity += quantity;
+    const nextQuantity = existingItem.quantity + quantity;
+    existingItem.quantity = allowedQuantity ? Math.min(nextQuantity, allowedQuantity) : nextQuantity;
   } else {
-    cart.push({ productId, quantity });
+    const initialQuantity = allowedQuantity ? Math.min(quantity, allowedQuantity) : quantity;
+
+    if (initialQuantity > 0) {
+      cart.push({ productId: normalizedProductId, quantity: initialQuantity });
+    }
   }
 
   saveCart(cart);
 }
 
-export function removeFromCart(productId: number): void {
+export function removeFromCart(productId: string | number): void {
+  const normalizedProductId = normalizeProductId(productId);
   const cart = getCart();
-  saveCart(cart.filter((item) => item.productId !== productId));
+  saveCart(cart.filter((item) => normalizeProductId(item.productId) !== normalizedProductId));
+}
+
+export function updateCartQuantity(productId: string | number, quantity: number): void {
+  const normalizedProductId = normalizeProductId(productId);
+
+  if (quantity <= 0) {
+    removeFromCart(normalizedProductId);
+    return;
+  }
+
+  const cart = getCart();
+  const existingItem = cart.find((item) => normalizeProductId(item.productId) === normalizedProductId);
+
+  if (existingItem) {
+    existingItem.quantity = quantity;
+    saveCart(cart);
+  }
 }
 
 export function clearCart(): void {
@@ -156,7 +221,7 @@ export function clearCart(): void {
 
 export function getCartTotal(items: CartItem[], products: Map<number, Product>): number {
   return items.reduce((total, item) => {
-    const product = products.get(item.productId);
+    const product = products.get(Number(normalizeProductId(item.productId)));
     return total + (product ? product.price * item.quantity : 0);
   }, 0);
 }

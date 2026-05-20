@@ -13,12 +13,21 @@ export default function Header() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Actualizar contador del carrito
-    const cart = getCart();
-    setCartCount(cart.reduce((sum, item) => sum + item.quantity, 0));
+    const refreshState = () => {
+      const cart = getCart();
+      setCartCount(cart.reduce((sum, item) => sum + item.quantity, 0));
+      setIsAdmin(isAdminLoggedIn());
+    };
 
-    // Verificar si está logged in
-    setIsAdmin(isAdminLoggedIn());
+    refreshState();
+
+    window.addEventListener('storage', refreshState);
+    window.addEventListener('techgear:cart-updated', refreshState);
+
+    return () => {
+      window.removeEventListener('storage', refreshState);
+      window.removeEventListener('techgear:cart-updated', refreshState);
+    };
   }, []);
 
   const handleLogout = () => {

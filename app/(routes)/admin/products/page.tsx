@@ -11,7 +11,7 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | number | null>(null);
 
   useEffect(() => {
     loadProducts();
@@ -28,14 +28,14 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string | number) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit?')) return;
 
     setDeletingId(id);
     const success = await deleteProduct(id);
 
     if (success) {
-      setProducts(products.filter(p => p.id !== id));
+      setProducts(products.filter((product) => String(product.id) !== String(id)));
     } else {
       setError('Erreur lors de la suppression du produit');
     }
