@@ -4,7 +4,7 @@
 import { MouseEvent, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getCart, getProductById, addToCart, Product, ProductReview } from "@/lib/api";
+import { getCart, getProductById, addToCart, Product } from "@/lib/api";
 import "./product-detail.scss";
 
 function renderStars(rating: number): string {
@@ -89,33 +89,19 @@ export default function ProductDetailPage() {
   const isAvailable = product.stock > 0;
   const currentQuantityInCart = getCart().find((item) => String(item.productId) === String(product.id))?.quantity ?? 0;
   const stockReached = currentQuantityInCart >= product.stock;
-  const rating = product.rating ?? 4.2;
-  const reviewCount = product.reviewCount ?? (product.reviews?.length ?? 0);
+  const reviews = product.reviews ?? [];
+  const computedAverage = reviews.length > 0
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+    : 0;
+  const rating = product.rating ?? computedAverage;
+  const reviewCount = product.reviewCount ?? reviews.length;
 
   // image set (support product.images array if available)
   const images = product.images && Array.isArray(product.images) && product.images.length > 0
     ? product.images
     : [product.image];
 
-  const fallbackReviews: ProductReview[] = [
-    {
-      id: `${product.id}-r1`,
-      author: "Alex M.",
-      rating: Math.max(1, Math.round(rating)),
-      comment: "Excellent produit, très bonne qualité et livraison rapide.",
-      date: "2026-05-18",
-    },
-    {
-      id: `${product.id}-r2`,
-      author: "Sophie L.",
-      rating: Math.max(1, Math.round(rating - 1)),
-      comment: "Bon rapport qualité/prix. Je recommande.",
-      date: "2026-05-10",
-    },
-  ];
-  const reviews = product.reviews && product.reviews.length > 0 ? product.reviews : fallbackReviews;
-
-  const maxSelectable = Math.max(1, Math.min(product.stock - currentQuantityInCart, 10));
+  const maxSelectable = Math.max(1, product.stock - currentQuantityInCart);
 
   const handleImageMouseMove = (event: MouseEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -235,9 +221,9 @@ export default function ProductDetailPage() {
         </div>
 
         <section className="reviews-section">
-          <h2>Reseñas de clientes</h2>
+          <h2>Avis des clients</h2>
           <div className="reviews-list">
-            {reviews.map((review) => (
+            {reviews.length > 0 ? reviews.map((review) => (
               <article key={review.id} className="review-card">
                 <div className="review-header">
                   <strong>{review.author}</strong>
@@ -246,7 +232,9 @@ export default function ProductDetailPage() {
                 <div className="review-stars">{renderStars(review.rating)}</div>
                 <p>{review.comment}</p>
               </article>
-            ))}
+            )) : (
+              <p>Aucun avis pour ce produit pour le moment.</p>
+            )}
           </div>
         </section>
       </div>
