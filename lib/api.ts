@@ -76,6 +76,36 @@ export type ShippingAddress = {
 
 export type UpsertShippingAddressRequest = Omit<ShippingAddress, 'id'>;
 
+export type AdminUserSummary = {
+  id: string;
+  email: string;
+  userName: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  city: string;
+  country: string;
+  roles: string[];
+};
+
+export type AdminOrderItem = {
+  productId: number;
+  productName: string;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+};
+
+export type AdminOrder = {
+  id: number;
+  userId: string;
+  userEmail: string;
+  stripeSessionId: string;
+  createdAtUtc: string;
+  totalAmount: number;
+  items: AdminOrderItem[];
+};
+
 type BackendAuthRequest = {
   email: string;
   password: string;
@@ -686,6 +716,34 @@ export async function deleteShippingAddress(id: number): Promise<boolean> {
   } catch (error) {
     console.error('Error deleting shipping address:', error);
     return false;
+  }
+}
+
+export async function getAdminUsers(): Promise<AdminUserSummary[]> {
+  try {
+    const response = await backendFetch('/admin/users');
+    if (!response.ok) {
+      throw new Error(`Error al cargar usuarios admin (${response.status})`);
+    }
+
+    return (await response.json()) as AdminUserSummary[];
+  } catch (error) {
+    console.error('Error fetching admin users:', error);
+    return [];
+  }
+}
+
+export async function getAdminOrders(): Promise<AdminOrder[]> {
+  try {
+    const response = await backendFetch('/orders');
+    if (!response.ok) {
+      throw new Error(`Error al cargar pedidos admin (${response.status})`);
+    }
+
+    return (await response.json()) as AdminOrder[];
+  } catch (error) {
+    console.error('Error fetching admin orders:', error);
+    return [];
   }
 }
 

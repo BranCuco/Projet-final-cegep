@@ -8,7 +8,7 @@ import '../admin/login/admin-login.scss';
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,13 +36,13 @@ function LoginPageContent() {
     setLoading(true);
     setError('');
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       setError('Veuillez remplir tous les champs');
       setLoading(false);
       return;
     }
 
-    const result = await loginAccount(email, password);
+    const result = await loginAccount(identifier, password);
 
     if (!result) {
       setError('Identifiants invalides');
@@ -66,15 +66,16 @@ function LoginPageContent() {
             {error && <div className="alert alert-error">{error}</div>}
 
             <div className="form-group">
-              <label htmlFor="email">Courriel</label>
+              <label htmlFor="identifier">Courriel ou identifiant admin</label>
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Entrez votre courriel"
+                id="identifier"
+                type="text"
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
+                placeholder="Entrez votre courriel ou admin"
                 disabled={loading}
                 autoFocus
+                autoComplete="username"
               />
             </div>
 

@@ -87,6 +87,18 @@ export default function Header() {
                     >
                       Produits
                     </Link>
+                    <Link 
+                      href="/admin/users" 
+                      className={`nav-link ${pathname === '/admin/users' ? 'active' : ''}`}
+                    >
+                      Utilisateurs
+                    </Link>
+                    <Link 
+                      href="/admin/orders" 
+                      className={`nav-link ${pathname === '/admin/orders' ? 'active' : ''}`}
+                    >
+                      Commandes
+                    </Link>
                     <button 
                       onClick={handleLogout}
                       className="nav-link logout-btn"

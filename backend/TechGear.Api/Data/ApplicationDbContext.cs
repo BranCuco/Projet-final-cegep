@@ -28,6 +28,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .Property(o => o.TotalAmount)
             .HasColumnType("decimal(18,2)");
 
+        builder.Entity<Order>()
+            .HasIndex(order => order.StripeSessionId)
+            .IsUnique();
+
         builder.Entity<OrderItem>()
             .Property(oi => oi.UnitPriceSnapshot)
             .HasColumnType("decimal(18,2)");

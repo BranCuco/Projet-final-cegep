@@ -5,14 +5,15 @@ type CheckoutItem = {
   quantity: number;
 };
 
+type CheckoutOrderResponse = {
+  ok?: boolean;
+  error?: string;
+  message?: string;
+};
+
 type Product = {
   id: string | number;
   stock: number;
-};
-
-type BackendProduct = {
-  id: string | number;
-  inventoryCount: number;
 };
 
 const API_BASE_URL =
@@ -26,38 +27,23 @@ const backendAdminPassword = process.env.BACKEND_ADMIN_PASSWORD || 'Admin123!';
 
 let backendAdminTokenCache: string | null = null;
 
+async function createOrderFromCheckout(payload: {
+  stripeSessionId: string;
+  customerEmail: string;
+  items: CheckoutItem[];
+}): Promise<CheckoutOrderResponse> {
+  const adminToken = await getBackendAdminToken();
 
-async function fetchProductById(id: string): Promise<Product | null> {
-  const response = await fetch(`${API_BASE_URL}/products/${id}`, {
-    cache: 'no-store',
+  const response = await fetch(`${API_BASE_URL}/orders/from-checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${adminToken}`,
+    },
+    body: JSON.stringify(payload),
   });
 
-  if (!response.ok) return null;
-
-  const product = (await response.json()) as BackendProduct;
-
-  return {
-    id: product.id,
-    stock: product.inventoryCount,
-  };
-}
-
-async function updateProductStock(id: string, stock: number): Promise<boolean> {
-  try {
-    const adminToken = await getBackendAdminToken();
-    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
-      },
-      body: JSON.stringify({ inventoryCount: stock }),
-    });
-
-    return response.ok;
-  } catch (error) {
-    return false;
-  }
+  return (await response.json().catch(() => null)) as CheckoutOrderResponse;
 }
 
 async function getBackendAdminToken(): Promise<string> {
@@ -122,8 +108,8 @@ export async function POST(request: Request) {
   }
 
   const metadata = session.metadata ?? {};
-  if (metadata.stockReduced === 'true') {
-    return Response.json({ ok: true, message: 'Stock already updated' });
+  if (metadata.orderCreated === 'true') {
+    return Response.json({ ok: true, message: 'Order already created' });
   }
 
   let items: CheckoutItem[] = [];
@@ -145,32 +131,31 @@ export async function POST(request: Request) {
     return Response.json({ error: 'No items to update' }, { status: 400 });
   }
 
-  for (const item of items) {
-    const product = await fetchProductById(String(item.productId));
-    if (!product) {
-      return Response.json(
-        { error: `Produit introuvable: ${item.productId}` },
-        { status: 404 }
-      );
-    }
-
-    const nextStock = Math.max(0, product.stock - item.quantity);
-    const updated = await updateProductStock(String(item.productId), nextStock);
-
-    if (!updated) {
-      return Response.json(
-        { error: `Erreur mise à jour stock: ${item.productId}` },
-        { status: 500 }
-      );
-    }
+  const customerEmail = String(metadata.customerEmail || session.customer_details?.email || session.customer_email || '').trim();
+  if (!customerEmail) {
+    return Response.json({ error: 'Missing customer email for order creation' }, { status: 400 });
   }
 
-  await stripe.checkout.sessions.update(sessionId, {
-    metadata: {
-      ...metadata,
-      stockReduced: 'true',
-    },
-  });
+  try {
+    const orderResult = await createOrderFromCheckout({
+      stripeSessionId: sessionId,
+      customerEmail,
+      items,
+    });
 
-  return Response.json({ ok: true });
+    if (orderResult.error) {
+      return Response.json({ error: orderResult.error }, { status: 500 });
+    }
+
+    await stripe.checkout.sessions.update(sessionId, {
+      metadata: {
+        ...metadata,
+        orderCreated: 'true',
+      },
+    });
+
+    return Response.json({ ok: true });
+  } catch (error) {
+    return Response.json({ error: 'Failed to create order from checkout' }, { status: 500 });
+  }
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { clearCart, getShippingAddresses, loadCart, getCartTotal, getProducts, removeFromCart, updateCartQuantity, isAuthenticated, type CartItem, type Product, type ShippingAddress } from '@/lib/api';
+import { clearCart, getCurrentUserProfile, getShippingAddresses, loadCart, getCartTotal, getProducts, removeFromCart, updateCartQuantity, isAuthenticated, type CartItem, type Product, type ShippingAddress } from '@/lib/api';
 import './cart.scss';
 
 type CartLineItem = CartItem & { product: Product };
@@ -111,7 +111,10 @@ export default function CartPage() {
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: cartItems }),
+        body: JSON.stringify({
+          items: cartItems,
+          customerEmail: (await getCurrentUserProfile())?.email || '',
+        }),
       });
 
       const data = await response.json().catch(() => null);

@@ -5,6 +5,11 @@ type CheckoutItem = {
   quantity: number;
 };
 
+type CheckoutRequestBody = {
+  items: CheckoutItem[];
+  customerEmail?: string;
+};
+
 type Product = {
   id: string | number;
   name: string;
@@ -109,8 +114,9 @@ export async function POST(request: Request) {
     apiVersion: '2026-04-22.dahlia',
   });
 
-  const body = await request.json().catch(() => null);
+  const body = (await request.json().catch(() => null)) as CheckoutRequestBody | null;
   const items: CheckoutItem[] = Array.isArray(body?.items) ? body.items : [];
+  const customerEmail = String(body?.customerEmail || '').trim();
 
   const normalizedItems = items
     .map((item) => ({
@@ -122,6 +128,13 @@ export async function POST(request: Request) {
   if (normalizedItems.length === 0) {
     return Response.json(
       { error: 'No valid items provided' },
+      { status: 400 }
+    );
+  }
+
+  if (!customerEmail) {
+    return Response.json(
+      { error: 'Missing customer email' },
       { status: 400 }
     );
   }
@@ -182,12 +195,14 @@ export async function POST(request: Request) {
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
     line_items: lineItems,
+    customer_email: customerEmail,
     success_url: `${baseUrl}/boutique/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/boutique/checkout/cancel`,
     metadata: {
       source: 'techgear',
       items: JSON.stringify(normalizedItems),
       currency: stripeCurrency,
+      customerEmail,
     },
   };
 

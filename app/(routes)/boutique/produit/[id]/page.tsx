@@ -4,7 +4,7 @@
 import { MouseEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getShippingAddresses, loadCart, getCart, getProductById, addToCart, isAuthenticated, Product } from "@/lib/api";
+import { getCurrentUserProfile, getShippingAddresses, loadCart, getCart, getProductById, addToCart, isAuthenticated, Product } from "@/lib/api";
 import "./product-detail.scss";
 
 function renderStars(rating: number): string {
@@ -93,6 +93,7 @@ export default function ProductDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: [{ productId: product.id, quantity }],
+          customerEmail: (await getCurrentUserProfile())?.email || '',
         }),
       });
 
