@@ -1,5 +1,5 @@
 // app/components/admin/ProductForm.scss
-@import '@/styles/scss/variables';
+@use '@/styles/scss/variables' as *;
 
 .product-form {
   background: $white;

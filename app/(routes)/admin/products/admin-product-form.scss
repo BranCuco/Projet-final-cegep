@@ -1,5 +1,6 @@
 // app/(routes)/admin/products/admin-product-form.scss
-@import '@/styles/scss/variables';
+@use '@/styles/scss/variables' as *;
+@use 'sass:color';
 
 .admin-product-form-page {
   padding: $spacing-2xl $spacing-md;
@@ -26,8 +27,8 @@
   .delete-section {
     margin-top: $spacing-2xl * 2;
     padding: $spacing-2xl;
-    background-color: lighten($danger, 45%);
-    border: 2px dashed lighten($danger, 15%);
+    background-color: color.adjust($danger, $lightness: 45%);
+    border: 2px dashed color.adjust($danger, $lightness: 15%);
     border-radius: $radius-md;
 
     h3 {
@@ -36,7 +37,7 @@
     }
 
     p {
-      color: darken($danger, 10%);
+      color: color.adjust($danger, $lightness: -10%);
       margin-bottom: $spacing-lg;
     }
 
@@ -50,10 +51,10 @@
 
       &.btn-danger {
         &.confirm {
-          background-color: darken($danger, 15%);
+          background-color: color.adjust($danger, $lightness: -15%);
 
           &:hover {
-            background-color: darken($danger, 25%);
+            background-color: color.adjust($danger, $lightness: -25%);
           }
         }
       }

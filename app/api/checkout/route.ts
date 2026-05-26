@@ -21,7 +21,7 @@ const API_BASE_URL =
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
 
 const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2026-04-22.dahlia',
 });
 
 function toIntegerAmount(price: number): number {

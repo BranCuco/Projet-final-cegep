@@ -1,5 +1,5 @@
 // app/components/common/Footer.scss
-@import '@/styles/scss/variables';
+@use '@/styles/scss/variables' as *;
 
 .footer {
   background-color: $primary;

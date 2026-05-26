@@ -1,5 +1,6 @@
 // app/components/boutique/ProductCard.scss
-@import '@/styles/scss/variables';
+@use '@/styles/scss/variables' as *;
+@use 'sass:color';
 
 .product-card {
   @include card;
@@ -117,13 +118,13 @@
       text-transform: capitalize;
 
       &.available {
-        background-color: lighten($success, 35%);
-        color: darken($success, 10%);
+        background-color: color.adjust($success, $lightness: 35%);
+        color: color.adjust($success, $lightness: -10%);
       }
 
       &.unavailable {
-        background-color: lighten($danger, 35%);
-        color: darken($danger, 10%);
+        background-color: color.adjust($danger, $lightness: 35%);
+        color: color.adjust($danger, $lightness: -10%);
       }
     }
   }

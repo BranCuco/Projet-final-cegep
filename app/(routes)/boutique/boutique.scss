@@ -1,5 +1,5 @@
 // app/(routes)/boutique/boutique.scss
-@import '@/styles/scss/variables';
+@use '@/styles/scss/variables' as *;
 
 .boutique-page {
   .boutique-hero {

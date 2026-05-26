@@ -1,5 +1,5 @@
 // app/components/common/Header.scss
-@import '@/styles/scss/variables';
+@use '@/styles/scss/variables' as *;
 
 .header {
   background-color: $primary;

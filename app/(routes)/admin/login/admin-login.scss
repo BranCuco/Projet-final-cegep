@@ -1,5 +1,5 @@
 // app/(routes)/admin/login/admin-login.scss
-@import '@/styles/scss/variables';
+@use '@/styles/scss/variables' as *;
 
 .admin-login-page {
   min-height: 100vh;

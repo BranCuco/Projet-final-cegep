@@ -1,5 +1,6 @@
 // app/(routes)/admin/products/admin-products.scss
-@import '@/styles/scss/variables';
+@use '@/styles/scss/variables' as *;
+@use 'sass:color';
 
 .admin-products-page {
   padding: $spacing-2xl $spacing-md;
@@ -65,7 +66,7 @@
     border-collapse: collapse;
 
     thead {
-      background-color: lighten($primary, 50%);
+      background-color: color.adjust($primary, $lightness: 50%);
       border-bottom: 2px solid $border-color;
 
       th {
@@ -85,7 +86,7 @@
         transition: background-color $transition-base;
 
         &:hover {
-          background-color: lighten($secondary, 50%);
+          background-color: color.adjust($secondary, $lightness: 50%);
         }
 
         &:last-child {
@@ -130,13 +131,13 @@
         font-weight: 600;
 
         &.in-stock {
-          background-color: lighten($success, 35%);
-          color: darken($success, 10%);
+          background-color: color.adjust($success, $lightness: 35%);
+          color: color.adjust($success, $lightness: -10%);
         }
 
         &.out-of-stock {
-          background-color: lighten($danger, 35%);
-          color: darken($danger, 10%);
+          background-color: color.adjust($danger, $lightness: 35%);
+          color: color.adjust($danger, $lightness: -10%);
         }
       }
     }
@@ -158,20 +159,20 @@
         text-decoration: none;
 
         &.edit {
-          background-color: lighten($secondary, 35%);
-          color: darken($secondary, 10%);
+          background-color: color.adjust($secondary, $lightness: 35%);
+          color: color.adjust($secondary, $lightness: -10%);
 
           &:hover {
-            background-color: lighten($secondary, 25%);
+            background-color: color.adjust($secondary, $lightness: 25%);
           }
         }
 
         &.delete {
-          background-color: lighten($danger, 35%);
-          color: darken($danger, 10%);
+          background-color: color.adjust($danger, $lightness: 35%);
+          color: color.adjust($danger, $lightness: -10%);
 
           &:hover:not(:disabled) {
-            background-color: lighten($danger, 25%);
+            background-color: color.adjust($danger, $lightness: 25%);
           }
 
           &:disabled {
