@@ -10,12 +10,21 @@ type Product = {
   stock: number;
 };
 
+type BackendProduct = {
+  id: string | number;
+  inventoryCount: number;
+};
+
 const API_BASE_URL =
   process.env.API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  'http://localhost:3001';
+  'http://localhost:5000/api';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
+const backendAdminUsername = process.env.BACKEND_ADMIN_USERNAME || 'admin';
+const backendAdminPassword = process.env.BACKEND_ADMIN_PASSWORD || 'Admin123!';
+
+let backendAdminTokenCache: string | null = null;
 
 
 async function fetchProductById(id: string): Promise<Product | null> {
@@ -25,18 +34,57 @@ async function fetchProductById(id: string): Promise<Product | null> {
 
   if (!response.ok) return null;
 
-  const product = await response.json();
-  return product ?? null;
+  const product = (await response.json()) as BackendProduct;
+
+  return {
+    id: product.id,
+    stock: product.inventoryCount,
+  };
 }
 
 async function updateProductStock(id: string, stock: number): Promise<boolean> {
-  const response = await fetch(`${API_BASE_URL}/products/${id}`, {
-    method: 'PATCH',
+  try {
+    const adminToken = await getBackendAdminToken();
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ inventoryCount: stock }),
+    });
+
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function getBackendAdminToken(): Promise<string> {
+  if (backendAdminTokenCache) {
+    return backendAdminTokenCache;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ stock }),
+    body: JSON.stringify({
+      email: backendAdminUsername,
+      password: backendAdminPassword,
+    }),
   });
 
-  return response.ok;
+  if (!response.ok) {
+    throw new Error('Unable to authenticate against backend');
+  }
+
+  const data = (await response.json()) as { token?: string };
+  if (!data.token) {
+    throw new Error('Backend token missing');
+  }
+
+  backendAdminTokenCache = data.token;
+  return backendAdminTokenCache;
 }
 
 export async function POST(request: Request) {

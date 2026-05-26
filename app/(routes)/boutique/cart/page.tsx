@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { clearCart, getCart, getCartTotal, getProducts, removeFromCart, updateCartQuantity, type CartItem, type Product } from '@/lib/api';
+import { clearCart, loadCart, getCartTotal, getProducts, removeFromCart, updateCartQuantity, type CartItem, type Product } from '@/lib/api';
 import './cart.scss';
 
 type CartLineItem = CartItem & { product: Product };
@@ -16,7 +16,7 @@ export default function CartPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      const [productsData, cartData] = await Promise.all([getProducts(), Promise.resolve(getCart())]);
+      const [productsData, cartData] = await Promise.all([getProducts(), loadCart()]);
       setProducts(productsData);
       setCartItems(cartData);
       setLoading(false);
@@ -24,13 +24,13 @@ export default function CartPage() {
 
     loadData();
 
-    const refreshCart = () => setCartItems(getCart());
-    window.addEventListener('techgear:cart-updated', refreshCart);
-    window.addEventListener('storage', refreshCart);
+    const refreshCart = async () => setCartItems(await loadCart());
+    window.addEventListener('techgear:cart-updated', refreshCart as EventListener);
+    window.addEventListener('storage', refreshCart as EventListener);
 
     return () => {
-      window.removeEventListener('techgear:cart-updated', refreshCart);
-      window.removeEventListener('storage', refreshCart);
+      window.removeEventListener('techgear:cart-updated', refreshCart as EventListener);
+      window.removeEventListener('storage', refreshCart as EventListener);
     };
   }, []);
 
@@ -46,16 +46,18 @@ export default function CartPage() {
 
   const total = useMemo(() => getCartTotal(cartItems, new Map(products.map((product) => [Number(product.id), product]))), [cartItems, products]);
 
-  const handleDecrease = (productId: string | number, quantity: number) => {
-    updateCartQuantity(productId, quantity - 1);
+  const handleDecrease = async (productId: string | number, quantity: number) => {
+    await updateCartQuantity(productId, quantity - 1);
+    setCartItems(await loadCart());
   };
 
-  const handleIncrease = (productId: string | number, quantity: number, stock: number) => {
-    updateCartQuantity(productId, Math.min(quantity + 1, stock));
+  const handleIncrease = async (productId: string | number, quantity: number, stock: number) => {
+    await updateCartQuantity(productId, Math.min(quantity + 1, stock));
+    setCartItems(await loadCart());
   };
 
-  const handleClearCart = () => {
-    clearCart();
+  const handleClearCart = async () => {
+    await clearCart();
     setCartItems([]);
   };
 
@@ -144,7 +146,14 @@ export default function CartPage() {
                           +
                         </button>
                       </div>
-                      <button type="button" className="btn btn-outline btn-sm" onClick={() => removeFromCart(product.id)}>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onClick={async () => {
+                          await removeFromCart(product.id);
+                          setCartItems(await loadCart());
+                        }}
+                      >
                         Retirer
                       </button>
                       {quantity >= product.stock && (

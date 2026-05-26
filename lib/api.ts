@@ -1,7 +1,7 @@
 // lib/api.ts
-// Utilidades para comunicarse con JSON Server
+// Utilidades para comunicarse con el backend ASP.NET Core
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
 
 export interface Product {
   id: string | number;
@@ -29,9 +29,150 @@ export interface ProductReview {
 }
 
 export interface CartItem {
+  id?: number;
   productId: string | number;
   quantity: number;
   product?: Product;
+}
+
+type BackendProduct = {
+  id: string | number;
+  name: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  inventoryCount: number;
+};
+
+type BackendAuthResponse = {
+  token: string;
+  email: string;
+  roles: string[];
+};
+
+type BackendAuthRequest = {
+  email: string;
+  password: string;
+};
+
+type BackendProductRequest = {
+  name: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  inventoryCount: number;
+};
+
+type BackendCartItemResponse = {
+  id: number;
+  productId: number;
+  productName: string;
+  productImageUrl: string;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+};
+
+type BackendCartRequest = {
+  productId: number;
+  quantity: number;
+};
+
+const AUTH_STORAGE_KEY = 'techgear_auth_token';
+
+// ============================================
+function mapBackendProduct(product: BackendProduct): Product {
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    image: product.imageUrl,
+    price: product.price,
+    stock: product.inventoryCount,
+  };
+}
+
+function toBackendProductRequest(product: Omit<Product, 'id' | 'createdAt'> | Partial<Product>): BackendProductRequest {
+  return {
+    name: product.name ?? '',
+    description: product.description ?? '',
+    imageUrl: product.image ?? '',
+    price: Number(product.price ?? 0),
+    inventoryCount: Number(product.stock ?? 0),
+  };
+}
+
+function getAuthToken(): string {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem(AUTH_STORAGE_KEY) || '';
+}
+
+function hasAuthToken(): boolean {
+  return Boolean(getAuthToken());
+}
+
+function setAuthToken(token: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(AUTH_STORAGE_KEY, token);
+}
+
+function clearAuthToken(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const json = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
+        .join('')
+    );
+
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function getAuthRoles(): string[] {
+  const token = getAuthToken();
+  if (!token) return [];
+
+  const payload = decodeJwtPayload(token);
+  if (!payload) return [];
+
+  const directRole = payload.role;
+  const schemaRole = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+
+  const roles = [directRole, schemaRole]
+    .flatMap((value) => (Array.isArray(value) ? value : value ? [value] : []))
+    .map((value) => String(value));
+
+  return Array.from(new Set(roles));
+}
+
+async function backendFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(options.headers || {});
+
+  if (!headers.has('Content-Type') && options.body) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const token = getAuthToken();
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  return fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers,
+  });
 }
 
 // ============================================
@@ -40,9 +181,10 @@ export interface CartItem {
 
 export async function getProducts(): Promise<Product[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/products`);
+    const response = await backendFetch('/products');
     if (!response.ok) throw new Error('Error al obtener productos');
-    return response.json();
+    const data = (await response.json()) as BackendProduct[];
+    return data.map(mapBackendProduct);
   } catch (error) {
     console.error('Error fetching products:', error);
     return [];
@@ -51,10 +193,11 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function getProductById(id: string | number): Promise<Product | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`);
+    const response = await backendFetch(`/products/${id}`);
 
     if (response.ok) {
-      return response.json();
+      const data = (await response.json()) as BackendProduct;
+      return mapBackendProduct(data);
     }
 
     const products = await getProducts();
@@ -73,16 +216,13 @@ export async function getProductById(id: string | number): Promise<Product | nul
 
 export async function createProduct(product: Omit<Product, 'id' | 'createdAt'>): Promise<Product | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/products`, {
+    const response = await backendFetch('/products', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...product,
-        createdAt: new Date().toISOString(),
-      }),
+      body: JSON.stringify(toBackendProductRequest(product)),
     });
     if (!response.ok) throw new Error('Error al crear producto');
-    return response.json();
+    const data = (await response.json()) as BackendProduct;
+    return mapBackendProduct(data);
   } catch (error) {
     console.error('Error creating product:', error);
     return null;
@@ -91,13 +231,13 @@ export async function createProduct(product: Omit<Product, 'id' | 'createdAt'>):
 
 export async function updateProduct(id: string | number, product: Partial<Product>): Promise<Product | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+    const response = await backendFetch(`/products/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(product),
+      body: JSON.stringify(toBackendProductRequest(product)),
     });
     if (!response.ok) throw new Error('Error al actualizar producto');
-    return response.json();
+    const data = (await response.json()) as BackendProduct;
+    return mapBackendProduct(data);
   } catch (error) {
     console.error('Error updating product:', error);
     return null;
@@ -106,7 +246,7 @@ export async function updateProduct(id: string | number, product: Partial<Produc
 
 export async function deleteProduct(id: string | number): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+    const response = await backendFetch(`/products/${id}`, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Error al eliminar producto');
@@ -131,7 +271,7 @@ export function searchProducts(products: Product[], query: string): Product[] {
 }
 
 // ============================================
-// Funciones de Carrito (localStorage)
+// Funciones de Carrito (localStorage - temporal hasta migración completa)
 // ============================================
 
 const CART_STORAGE_KEY = 'techgear_cart';
@@ -145,6 +285,52 @@ function notifyCartChanged(): void {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(CART_UPDATED_EVENT));
   }
+}
+
+function persistCart(cart: CartItem[], shouldNotify: boolean = true): void {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      if (shouldNotify) {
+        notifyCartChanged();
+      }
+    }
+  } catch (error) {
+    console.error('Error saving cart:', error);
+  }
+}
+
+function mapBackendCartItem(item: BackendCartItemResponse): CartItem {
+  return {
+    id: item.id,
+    productId: item.productId,
+    quantity: item.quantity,
+    product: {
+      id: item.productId,
+      name: item.productName,
+      description: item.productName,
+      image: item.productImageUrl,
+      price: Number(item.unitPrice),
+      stock: item.quantity,
+    },
+  };
+}
+
+async function fetchBackendCart(): Promise<CartItem[]> {
+  const response = await backendFetch('/cart');
+
+  if (!response.ok) {
+    throw new Error('Error al obtener el carrito del backend');
+  }
+
+  const data = (await response.json()) as BackendCartItemResponse[];
+  return data.map(mapBackendCartItem);
+}
+
+async function syncCartCacheFromBackend(): Promise<CartItem[]> {
+  const cart = await fetchBackendCart();
+  persistCart(cart, false);
+  return cart;
 }
 
 export function getCart(): CartItem[] {
@@ -175,19 +361,45 @@ export function getCart(): CartItem[] {
   }
 }
 
-export function saveCart(cart: CartItem[]): void {
+export async function loadCart(): Promise<CartItem[]> {
+  if (!hasAuthToken()) {
+    return getCart();
+  }
+
   try {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-      notifyCartChanged();
-    }
+    return await syncCartCacheFromBackend();
   } catch (error) {
-    console.error('Error saving cart:', error);
+    console.error('Error loading backend cart:', error);
+    return getCart();
   }
 }
 
-export function addToCart(productId: string | number, quantity: number = 1, maxQuantity?: number): void {
+export function saveCart(cart: CartItem[]): void {
+  persistCart(cart, true);
+}
+
+export async function addToCart(productId: string | number, quantity: number = 1, maxQuantity?: number): Promise<void> {
   const normalizedProductId = normalizeProductId(productId);
+  if (hasAuthToken()) {
+    try {
+      const response = await backendFetch('/cart', {
+        method: 'POST',
+        body: JSON.stringify({
+          productId: Number(normalizedProductId),
+          quantity,
+        } satisfies BackendCartRequest),
+      });
+
+      if (response.ok) {
+        await syncCartCacheFromBackend();
+        notifyCartChanged();
+        return;
+      }
+    } catch (error) {
+      console.error('Error adding backend cart item:', error);
+    }
+  }
+
   const cart = getCart();
   const existingItem = cart.find((item) => normalizeProductId(item.productId) === normalizedProductId);
   const allowedQuantity = typeof maxQuantity === 'number' ? Math.max(0, maxQuantity) : undefined;
@@ -206,18 +418,65 @@ export function addToCart(productId: string | number, quantity: number = 1, maxQ
   saveCart(cart);
 }
 
-export function removeFromCart(productId: string | number): void {
+export async function removeFromCart(productId: string | number): Promise<void> {
   const normalizedProductId = normalizeProductId(productId);
+
+  if (hasAuthToken()) {
+    try {
+      const cart = await loadCart();
+      const item = cart.find((entry) => normalizeProductId(entry.productId) === normalizedProductId);
+
+      if (item?.id) {
+        const response = await backendFetch(`/cart/${item.id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          await syncCartCacheFromBackend();
+          notifyCartChanged();
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error removing backend cart item:', error);
+    }
+  }
+
   const cart = getCart();
   saveCart(cart.filter((item) => normalizeProductId(item.productId) !== normalizedProductId));
 }
 
-export function updateCartQuantity(productId: string | number, quantity: number): void {
+export async function updateCartQuantity(productId: string | number, quantity: number): Promise<void> {
   const normalizedProductId = normalizeProductId(productId);
 
   if (quantity <= 0) {
-    removeFromCart(normalizedProductId);
+    await removeFromCart(normalizedProductId);
     return;
+  }
+
+  if (hasAuthToken()) {
+    try {
+      const cart = await loadCart();
+      const item = cart.find((entry) => normalizeProductId(entry.productId) === normalizedProductId);
+
+      if (item?.id) {
+        const response = await backendFetch(`/cart/${item.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            productId: Number(normalizedProductId),
+            quantity,
+          } satisfies BackendCartRequest),
+        });
+
+        if (response.ok) {
+          await syncCartCacheFromBackend();
+          notifyCartChanged();
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error updating backend cart item:', error);
+    }
   }
 
   const cart = getCart();
@@ -229,7 +488,23 @@ export function updateCartQuantity(productId: string | number, quantity: number)
   }
 }
 
-export function clearCart(): void {
+export async function clearCart(): Promise<void> {
+  if (hasAuthToken()) {
+    try {
+      const response = await backendFetch('/cart', {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        persistCart([], false);
+        notifyCartChanged();
+        return;
+      }
+    } catch (error) {
+      console.error('Error clearing backend cart:', error);
+    }
+  }
+
   saveCart([]);
 }
 
@@ -244,29 +519,37 @@ export function getCartTotal(items: CartItem[], products: Map<number, Product>):
 // Funciones de Autenticación Admin
 // ============================================
 
-const ADMIN_STORAGE_KEY = 'techgear_admin_token';
-const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = 'Admin123!';
+export async function loginAdmin(username: string, password: string): Promise<boolean> {
+  try {
+    const response = await backendFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: username, password } satisfies BackendAuthRequest),
+    });
 
-export function loginAdmin(username: string, password: string): boolean {
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(ADMIN_STORAGE_KEY, 'true');
+    if (!response.ok) {
+      return false;
     }
-    return true;
+
+    const data = (await response.json()) as BackendAuthResponse;
+    setAuthToken(data.token);
+    return data.roles.includes('Admin');
+  } catch (error) {
+    console.error('Error logging admin:', error);
+    return false;
   }
-  return false;
 }
 
 export function isAdminLoggedIn(): boolean {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem(ADMIN_STORAGE_KEY) === 'true';
+  return getAuthRoles().includes('Admin');
 }
 
 export function logoutAdmin(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(ADMIN_STORAGE_KEY);
-  }
+  clearAuthToken();
+}
+
+export function getAuthTokenHeader(): Record<string, string> {
+  const token = getAuthToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 // ============================================

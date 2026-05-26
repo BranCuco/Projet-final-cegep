@@ -13,10 +13,18 @@ type Product = {
   stock: number;
 };
 
+type BackendProduct = {
+  id: string | number;
+  name: string;
+  price: number;
+  imageUrl: string;
+  inventoryCount: number;
+};
+
 const API_BASE_URL =
   process.env.API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  'http://localhost:3001';
+  'http://localhost:5000/api';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
 
@@ -52,10 +60,16 @@ async function fetchProductsByIds(ids: string[]): Promise<Product[]> {
   }
 
   const filteredData = await filteredResponse.json();
-  const filteredProducts = Array.isArray(filteredData) ? filteredData : [];
+  const filteredProducts = (Array.isArray(filteredData) ? filteredData : []) as BackendProduct[];
 
   if (filteredProducts.length > 0) {
-    return filteredProducts;
+    return filteredProducts.map((product) => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.imageUrl,
+      stock: product.inventoryCount,
+    }));
   }
 
   const response = await fetch(`${API_BASE_URL}/products`, {
@@ -67,9 +81,17 @@ async function fetchProductsByIds(ids: string[]): Promise<Product[]> {
   }
 
   const data = await response.json();
-  const products = Array.isArray(data) ? data : [];
+  const products = (Array.isArray(data) ? data : []) as BackendProduct[];
   const idSet = new Set(ids);
-  return products.filter((product) => idSet.has(String(product.id)));
+  return products
+    .filter((product) => idSet.has(String(product.id)))
+    .map((product) => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.imageUrl,
+      stock: product.inventoryCount,
+    }));
 }
 
 export async function POST(request: Request) {

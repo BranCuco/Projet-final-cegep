@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { isAdminLoggedIn, logoutAdmin, getCart } from '@/lib/api';
+import { isAdminLoggedIn, logoutAdmin, loadCart } from '@/lib/api';
 import { useState, useEffect } from 'react';
 import './Header.scss';
 
@@ -13,8 +13,8 @@ export default function Header() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const refreshState = () => {
-      const cart = getCart();
+    const refreshState = async () => {
+      const cart = await loadCart();
       setCartCount(cart.reduce((sum, item) => sum + item.quantity, 0));
       setIsAdmin(isAdminLoggedIn());
     };

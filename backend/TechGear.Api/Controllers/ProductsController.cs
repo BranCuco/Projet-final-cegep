@@ -97,4 +97,25 @@ public class ProductsController : ControllerBase
         await _dbContext.SaveChangesAsync();
         return NoContent();
     }
+
+    [HttpPatch("{id:int}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateStock(int id, [FromBody] UpdateStockRequestDto request)
+    {
+        var product = await _dbContext.Products.FindAsync(id);
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        if (request.InventoryCount < 0)
+        {
+            return BadRequest("Inventory cannot be negative.");
+        }
+
+        product.InventoryCount = request.InventoryCount;
+        await _dbContext.SaveChangesAsync();
+
+        return NoContent();
+    }
 }

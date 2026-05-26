@@ -4,7 +4,7 @@
 import { MouseEvent, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getCart, getProductById, addToCart, Product } from "@/lib/api";
+import { loadCart, getCart, getProductById, addToCart, Product } from "@/lib/api";
 import "./product-detail.scss";
 
 function renderStars(rating: number): string {
@@ -47,18 +47,19 @@ export default function ProductDetailPage() {
     loadProduct();
   }, [productId]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (product) {
-      const currentQuantity = getCart().find((item) => String(item.productId) === String(product.id))?.quantity ?? 0;
+      const currentQuantity = (await loadCart()).find((item) => String(item.productId) === String(product.id))?.quantity ?? 0;
 
       if (currentQuantity + quantity > product.stock) {
         // prevent exceeding stock
         return;
       }
 
-      addToCart(product.id, quantity, product.stock);
+      await addToCart(product.id, quantity, product.stock);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
+      window.dispatchEvent(new Event('techgear:cart-updated'));
     }
   };
 

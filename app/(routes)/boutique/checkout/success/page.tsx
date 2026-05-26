@@ -13,7 +13,7 @@ function CheckoutSuccessContent() {
   useEffect(() => {
     const confirmPurchase = async () => {
       if (!sessionId) {
-        clearCart();
+        await clearCart();
         return;
       }
 
@@ -34,7 +34,7 @@ function CheckoutSuccessContent() {
       } catch (error) {
         setStatusMessage("Erreur lors de la confirmation de paiement.");
       } finally {
-        clearCart();
+        await clearCart();
       }
     };
 
