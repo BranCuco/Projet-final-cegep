@@ -58,6 +58,38 @@ Recommended run sequence in PowerShell:
 - `dotnet ef database update`
 - `dotnet run`
 
+## 4.1 Offline testing (outside Cegep network)
+
+You can fully test the API using local SQL Server in Docker, then switch back to `dicjwin01` later.
+
+From `backend/TechGear.Api`:
+
+1. Start local SQL Server container:
+	- `pwsh ./scripts/start-local-sql.ps1 -SaPassword "YourStrong!Passw0rd"`
+2. Run API against local DB (`appsettings.Local.json`):
+	- `pwsh ./scripts/run-local-api.ps1 -SqlPassword "YourStrong!Passw0rd"`
+3. Stop/remove local SQL container when done:
+	- `pwsh ./scripts/stop-local-sql.ps1`
+
+Local mode uses:
+- server: `localhost,14333`
+- database: `TechGearShopDb.Local`
+- environment: `ASPNETCORE_ENVIRONMENT=Local`
+
+## 4.2 Quick offline testing (no SQL Server at all)
+
+If Docker is unavailable, run the API with EF InMemory just for local validation:
+
+From `backend/TechGear.Api`:
+
+1. `powershell -ExecutionPolicy Bypass -File .\scripts\run-test-api.ps1`
+
+Notes:
+- Uses `ASPNETCORE_ENVIRONMENT=Test` and `appsettings.Test.json`
+- No MSSQL connectivity is required
+- Starts with `dotnet run --no-launch-profile` to avoid `launchSettings.json` forcing Development
+- This mode is for smoke testing endpoints only; final validation must still use MSSQL (`dicjwin01`)
+
 Or use helper script:
 - `pwsh ./scripts/apply-migrations.ps1 -MssqlPassword "YOUR_PASSWORD"`
 

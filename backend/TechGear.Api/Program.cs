@@ -21,19 +21,31 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-var connectionStringTemplate = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Missing DefaultConnection string.");
+var useInMemoryDatabase =
+    builder.Configuration.GetValue<bool>("UseInMemoryDatabase") ||
+    builder.Environment.IsEnvironment("Test");
 
-var mssqlPassword =
-    builder.Configuration["Mssql:Password"] ??
-    Environment.GetEnvironmentVariable("MSSQL_PASSWORD");
+if (useInMemoryDatabase)
+{
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseInMemoryDatabase("TechGearApiTestDb"));
+}
+else
+{
+    var connectionStringTemplate = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Missing DefaultConnection string.");
 
-var connectionString = string.IsNullOrWhiteSpace(mssqlPassword)
-    ? connectionStringTemplate
-    : connectionStringTemplate.Replace("__MSSQL_PASSWORD__", mssqlPassword);
+    var mssqlPassword =
+        builder.Configuration["Mssql:Password"] ??
+        Environment.GetEnvironmentVariable("MSSQL_PASSWORD");
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    var connectionString = string.IsNullOrWhiteSpace(mssqlPassword)
+        ? connectionStringTemplate
+        : connectionStringTemplate.Replace("__MSSQL_PASSWORD__", mssqlPassword);
+
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlServer(connectionString));
+}
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>()
@@ -97,7 +109,7 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Test"))
 {
     app.UseSwagger();
     app.UseSwaggerUI();
