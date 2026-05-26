@@ -80,6 +80,10 @@ export async function POST(request: Request) {
     );
   }
 
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2026-04-22.dahlia',
+  });
+
   const body = await request.json().catch(() => null);
   const items: CheckoutItem[] = Array.isArray(body?.items) ? body.items : [];
 
@@ -158,6 +162,7 @@ export async function POST(request: Request) {
       cancel_url: `${baseUrl}/boutique/checkout/cancel`,
       metadata: {
         source: 'techgear',
+        items: JSON.stringify(normalizedItems),
       },
     });
 

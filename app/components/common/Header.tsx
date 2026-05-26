@@ -44,7 +44,11 @@ export default function Header() {
         <div className="header-content">
           {/* Logo */}
           <Link href="/" className="logo">
-            <span className="logo-icon">⚙️</span>
+            <img
+              src="/techgear-gear.svg"
+              alt="TechGear"
+              className="logo-image"
+            />
             <span className="logo-text">TechGear</span>
           </Link>
 
