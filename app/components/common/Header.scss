@@ -118,6 +118,21 @@
       font-weight: 700;
     }
   }
+
+  .user-link {
+    font-size: 24px;
+    color: $white;
+    text-decoration: none;
+    transition: opacity $transition-base;
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    .user-icon {
+      display: inline-block;
+    }
+  }
 }
 
 @media (max-width: $breakpoint-md) {
@@ -135,6 +150,11 @@
       .nav-label {
         display: none;
       }
+    }
+
+    .user-link,
+    .cart-link {
+      font-size: 22px;
     }
   }
 }

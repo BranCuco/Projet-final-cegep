@@ -81,6 +81,17 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevCors", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "TechGear API", Version = "v1" });
@@ -117,6 +128,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Test"))
 
 app.UseSerilogRequestLogging();
 app.UseHttpsRedirection();
+app.UseCors("DevCors");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

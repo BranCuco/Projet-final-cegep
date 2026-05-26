@@ -18,7 +18,7 @@ type BackendProduct = {
 const API_BASE_URL =
   process.env.API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  'http://localhost:5000/api';
+  'http://localhost:5227/api';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
 const backendAdminUsername = process.env.BACKEND_ADMIN_USERNAME || 'admin';

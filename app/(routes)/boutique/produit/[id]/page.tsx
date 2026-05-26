@@ -2,9 +2,9 @@
 "use client";
 
 import { MouseEvent, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { loadCart, getCart, getProductById, addToCart, Product } from "@/lib/api";
+import { getShippingAddresses, loadCart, getCart, getProductById, addToCart, isAuthenticated, Product } from "@/lib/api";
 import "./product-detail.scss";
 
 function renderStars(rating: number): string {
@@ -14,6 +14,7 @@ function renderStars(rating: number): string {
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const productId = params.id as string;
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -48,6 +49,11 @@ export default function ProductDetailPage() {
   }, [productId]);
 
   const handleAddToCart = async () => {
+    if (!isAuthenticated()) {
+      router.push('/login?reason=add-to-cart');
+      return;
+    }
+
     if (product) {
       const currentQuantity = (await loadCart()).find((item) => String(item.productId) === String(product.id))?.quantity ?? 0;
 
@@ -65,6 +71,18 @@ export default function ProductDetailPage() {
 
   const handleCheckout = async () => {
     if (!product || isCheckingOut) return;
+
+    if (!isAuthenticated()) {
+      router.push('/login?reason=buy-now');
+      return;
+    }
+
+    const addresses = await getShippingAddresses();
+    if (addresses.length === 0) {
+      setCheckoutError('Ajoutez au moins une adresse de livraison dans votre compte avant de payer.');
+      router.push('/account');
+      return;
+    }
 
     setIsCheckingOut(true);
     setCheckoutError(null);

@@ -14,6 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CartItem> CartItems => Set<CartItem>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<ShippingAddress> ShippingAddresses => Set<ShippingAddress>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -39,6 +40,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasMany(o => o.Items)
             .WithOne(i => i.Order)
             .HasForeignKey(i => i.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<ShippingAddress>()
+            .HasIndex(address => new { address.UserId, address.IsDefault });
+
+        builder.Entity<ShippingAddress>()
+            .HasOne(address => address.User)
+            .WithMany(user => user.ShippingAddresses)
+            .HasForeignKey(address => address.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

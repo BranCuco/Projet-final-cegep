@@ -1,7 +1,7 @@
 // lib/api.ts
 // Utilidades para comunicarse con el backend ASP.NET Core
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5227/api';
 
 export interface Product {
   id: string | number;
@@ -49,6 +49,32 @@ type BackendAuthResponse = {
   email: string;
   roles: string[];
 };
+
+export type CurrentUserProfile = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+  roles: string[];
+};
+
+type UpdateUserProfileRequest = Omit<CurrentUserProfile, 'roles'>;
+
+export type ShippingAddress = {
+  id: number;
+  label: string;
+  recipientName: string;
+  phoneNumber: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isDefault: boolean;
+};
+
+export type UpsertShippingAddressRequest = Omit<ShippingAddress, 'id'>;
 
 type BackendAuthRequest = {
   email: string;
@@ -155,6 +181,10 @@ function getAuthRoles(): string[] {
     .map((value) => String(value));
 
   return Array.from(new Set(roles));
+}
+
+function hasAuthSession(): boolean {
+  return Boolean(getAuthToken());
 }
 
 async function backendFetch(path: string, options: RequestInit = {}): Promise<Response> {
@@ -520,22 +550,27 @@ export function getCartTotal(items: CartItem[], products: Map<number, Product>):
 // ============================================
 
 export async function loginAdmin(username: string, password: string): Promise<boolean> {
+  const result = await loginAccount(username, password);
+  return Boolean(result && result.roles.includes('Admin'));
+}
+
+export async function loginAccount(email: string, password: string): Promise<BackendAuthResponse | null> {
   try {
     const response = await backendFetch('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email: username, password } satisfies BackendAuthRequest),
+      body: JSON.stringify({ email, password } satisfies BackendAuthRequest),
     });
 
     if (!response.ok) {
-      return false;
+      return null;
     }
 
     const data = (await response.json()) as BackendAuthResponse;
     setAuthToken(data.token);
-    return data.roles.includes('Admin');
+    return data;
   } catch (error) {
     console.error('Error logging admin:', error);
-    return false;
+    return null;
   }
 }
 
@@ -543,13 +578,115 @@ export function isAdminLoggedIn(): boolean {
   return getAuthRoles().includes('Admin');
 }
 
+export function isAuthenticated(): boolean {
+  return hasAuthSession();
+}
+
 export function logoutAdmin(): void {
+  clearAuthToken();
+}
+
+export function logoutAccount(): void {
   clearAuthToken();
 }
 
 export function getAuthTokenHeader(): Record<string, string> {
   const token = getAuthToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function getCurrentUserProfile(): Promise<CurrentUserProfile | null> {
+  try {
+    const response = await backendFetch('/users/me');
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as CurrentUserProfile;
+  } catch (error) {
+    console.error('Error fetching current user profile:', error);
+    return null;
+  }
+}
+
+export async function updateCurrentUserProfile(profile: UpdateUserProfileRequest): Promise<CurrentUserProfile | null> {
+  try {
+    const response = await backendFetch('/users/me', {
+      method: 'PUT',
+      body: JSON.stringify(profile),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as CurrentUserProfile;
+  } catch (error) {
+    console.error('Error updating current user profile:', error);
+    return null;
+  }
+}
+
+export async function getShippingAddresses(): Promise<ShippingAddress[]> {
+  try {
+    const response = await backendFetch('/addresses');
+    if (!response.ok) {
+      return [];
+    }
+
+    return (await response.json()) as ShippingAddress[];
+  } catch (error) {
+    console.error('Error fetching shipping addresses:', error);
+    return [];
+  }
+}
+
+export async function createShippingAddress(address: UpsertShippingAddressRequest): Promise<ShippingAddress | null> {
+  try {
+    const response = await backendFetch('/addresses', {
+      method: 'POST',
+      body: JSON.stringify(address),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as ShippingAddress;
+  } catch (error) {
+    console.error('Error creating shipping address:', error);
+    return null;
+  }
+}
+
+export async function updateShippingAddress(id: number, address: UpsertShippingAddressRequest): Promise<ShippingAddress | null> {
+  try {
+    const response = await backendFetch(`/addresses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(address),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as ShippingAddress;
+  } catch (error) {
+    console.error('Error updating shipping address:', error);
+    return null;
+  }
+}
+
+export async function deleteShippingAddress(id: number): Promise<boolean> {
+  try {
+    const response = await backendFetch(`/addresses/${id}`, {
+      method: 'DELETE',
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Error deleting shipping address:', error);
+    return false;
+  }
 }
 
 // ============================================

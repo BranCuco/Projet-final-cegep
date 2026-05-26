@@ -21,16 +21,19 @@ type BackendProduct = {
   inventoryCount: number;
 };
 
+type StripeErrorShape = {
+  message?: string;
+  code?: string;
+  type?: string;
+};
+
 const API_BASE_URL =
   process.env.API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  'http://localhost:5000/api';
+  'http://localhost:5227/api';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
-
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2026-04-22.dahlia',
-});
+const stripeCurrency = (process.env.STRIPE_CURRENCY || 'cad').toLowerCase();
 
 function toIntegerAmount(price: number): number {
   return Math.max(0, Math.round(price * 100));
@@ -164,7 +167,7 @@ export async function POST(request: Request) {
     return {
       quantity: item.quantity,
       price_data: {
-        currency: 'usd',
+        currency: stripeCurrency,
         unit_amount: toIntegerAmount(product.price),
         product_data: {
           name: product.name,
@@ -176,22 +179,30 @@ export async function POST(request: Request) {
 
   const baseUrl = getBaseUrl(request);
 
-  try {
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items: lineItems,
-      success_url: `${baseUrl}/boutique/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/boutique/checkout/cancel`,
-      metadata: {
-        source: 'techgear',
-        items: JSON.stringify(normalizedItems),
-      },
-    });
+  const sessionParams: Stripe.Checkout.SessionCreateParams = {
+    mode: 'payment',
+    line_items: lineItems,
+    success_url: `${baseUrl}/boutique/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${baseUrl}/boutique/checkout/cancel`,
+    metadata: {
+      source: 'techgear',
+      items: JSON.stringify(normalizedItems),
+      currency: stripeCurrency,
+    },
+  };
 
+  try {
+    const session = await stripe.checkout.sessions.create(sessionParams);
     return Response.json({ url: session.url });
   } catch (error) {
+    const stripeError = error as StripeErrorShape;
     return Response.json(
-      { error: 'Stripe checkout session failed' },
+      {
+        error: 'Stripe checkout session failed',
+        detail: stripeError?.message || 'Unknown Stripe error',
+        code: stripeError?.code || null,
+        type: stripeError?.type || null,
+      },
       { status: 500 }
     );
   }
